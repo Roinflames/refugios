@@ -778,8 +778,7 @@ h2.section__title {
 /* ============================================================
    STAT CARDS — small metric displays
    ============================================================ */
-.avail-stats,
-.sales-kpis {
+.avail-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 0.75rem;
@@ -998,13 +997,22 @@ h2.section__title {
 }
 
 /* ============================================================
-   SALES FILTERS
+   SECTION FILTERS & KPIs — reusable per-section filter bar
    ============================================================ */
+.section-filters,
 .sales-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+.section-kpis,
+.sales-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
 }
 
 /* ============================================================

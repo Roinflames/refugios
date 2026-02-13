@@ -1,5 +1,5 @@
 const money = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
-const UI_VERSION = "0.7.0";
+const UI_VERSION = "0.8.0";
 
 const paymentLabels = {
   transfer: "Transferencia",
@@ -26,7 +26,18 @@ const state = {
   salesFilterCategory: "",
   salesPage: 1,
   salesPageSize: 10,
-  salesTotalRows: 0
+  salesTotalRows: 0,
+  expensesFilterPayment: "",
+  expensesFilterCategory: "",
+  expensesPage: 1,
+  expensesPageSize: 10,
+  expensesTotalRows: 0,
+  guestsFilterDebt: "",
+  guestsFilterName: "",
+  reservationsFilterSource: "",
+  reservationsFilterDebt: "",
+  reservationsFilterName: "",
+  documentsFilterType: ""
 };
 
 function normalizeDocumentId(value) {
@@ -66,58 +77,27 @@ function setUiVersion() {
 function setupFocusMode() {
   const navLinks = [...document.querySelectorAll(".sidebar__link")];
   const panels = [...document.querySelectorAll(".panel")];
-  const toggle = document.getElementById("view-toggle");
-  const STORAGE_KEY = "view_mode";
-  const DEFAULT_PANEL = "#section-reservations";
+  const DEFAULT_PANEL = "#section-dashboard";
 
   const setActivePanel = (id) => {
     panels.forEach((panel) => panel.classList.toggle("is-active", `#${panel.id}` === id));
     navLinks.forEach((link) => link.classList.toggle("is-active", link.getAttribute("href") === id));
+    window.scrollTo({ top: 0 });
   };
 
-  const applyMode = () => {
-    const isSingle = localStorage.getItem(STORAGE_KEY) !== "all";
-    if (isSingle) {
-      document.body.classList.add("focus-mode");
-      if (!document.querySelector(".panel.is-active")) setActivePanel(DEFAULT_PANEL);
-      if (toggle) toggle.textContent = "Ver todo";
-    } else {
-      document.body.classList.remove("focus-mode");
-      panels.forEach((panel) => panel.classList.add("is-active"));
-      navLinks.forEach((link) => link.classList.remove("is-active"));
-      if (toggle) toggle.textContent = "Ver por sección";
-    }
-  };
+  document.body.classList.add("focus-mode");
+  setActivePanel(DEFAULT_PANEL);
 
   navLinks.forEach((link) => {
     link.addEventListener("click", (event) => {
       const id = link.getAttribute("href");
       if (!id) return;
       event.preventDefault();
-      // Update sidebar active state
-      navLinks.forEach((l) => l.classList.remove("is-active"));
-      link.classList.add("is-active");
-      // Close mobile sidebar after navigation
+      setActivePanel(id);
       const sidebar = document.getElementById("sidebar");
       if (sidebar) sidebar.classList.remove("is-open");
-      if (document.body.classList.contains("focus-mode")) {
-        setActivePanel(id);
-        return;
-      }
-      const target = document.querySelector(id);
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
-
-  if (toggle) {
-    toggle.addEventListener("click", () => {
-      const isSingle = document.body.classList.contains("focus-mode");
-      localStorage.setItem(STORAGE_KEY, isSingle ? "all" : "single");
-      applyMode();
-    });
-  }
-
-  applyMode();
 }
 
 function setupSidebarToggle() {
@@ -397,6 +377,102 @@ function renderSalesTable(rows) {
     .join("");
 }
 
+function applyExpensesFilters(rows) {
+  return rows.filter((row) => {
+    if (state.expensesFilterPayment && row.payment_method !== state.expensesFilterPayment) return false;
+    if (state.expensesFilterCategory) {
+      const category = String(row.category || "").toLowerCase();
+      if (!category.includes(state.expensesFilterCategory)) return false;
+    }
+    return true;
+  });
+}
+
+function renderExpensesKpis(rows) {
+  const total = rows.reduce((acc, row) => acc + Number(row.amount || 0), 0);
+  const count = rows.length;
+  const average = count > 0 ? total / count : 0;
+  const totalEl = document.getElementById("expenses-kpi-total");
+  const countEl = document.getElementById("expenses-kpi-count");
+  const avgEl = document.getElementById("expenses-kpi-average");
+  if (totalEl) totalEl.textContent = money.format(total);
+  if (countEl) countEl.textContent = String(count);
+  if (avgEl) avgEl.textContent = money.format(average);
+}
+
+function getExpensesPagedRows(rows) {
+  const start = (state.expensesPage - 1) * state.expensesPageSize;
+  return rows.slice(start, start + state.expensesPageSize);
+}
+
+function renderExpensesPaginationControls(totalRows) {
+  const controls = document.getElementById("expenses-pagination");
+  if (!controls) return;
+  const totalPages = Math.max(1, Math.ceil(totalRows / state.expensesPageSize));
+  if (state.expensesPage > totalPages) state.expensesPage = totalPages;
+  controls.innerHTML = `
+    <button data-exp-pagination="prev" ${state.expensesPage === 1 ? "disabled" : ""}>Anterior</button>
+    <span>Pagina ${state.expensesPage} / ${totalPages}</span>
+    <button data-exp-pagination="next" ${state.expensesPage === totalPages ? "disabled" : ""}>Siguiente</button>
+    <label>Filas
+      <select id="expenses-page-size">
+        <option value="10" ${state.expensesPageSize === 10 ? "selected" : ""}>10</option>
+        <option value="20" ${state.expensesPageSize === 20 ? "selected" : ""}>20</option>
+        <option value="50" ${state.expensesPageSize === 50 ? "selected" : ""}>50</option>
+      </select>
+    </label>
+  `;
+}
+
+function renderExpensesTable(rows) {
+  const body = document.getElementById("expenses-table-body");
+  if (!body) return;
+  state.expensesTotalRows = rows.length;
+  const pageRows = getExpensesPagedRows(rows);
+  renderExpensesPaginationControls(rows.length);
+  body.innerHTML = pageRows
+    .map(
+      (row) => `<tr>
+        <td>${formatDate(row.expense_date)}</td>
+        <td>${row.category}</td>
+        <td>${paymentLabels[row.payment_method] || row.payment_method}</td>
+        <td>${money.format(row.amount)}</td>
+        <td>${deleteButton("expenses", row.id)}</td>
+      </tr>`
+    )
+    .join("");
+}
+
+function applyGuestsFilters(rows) {
+  return rows.filter((row) => {
+    if (state.guestsFilterDebt && row.reservation_debt_status !== state.guestsFilterDebt) return false;
+    if (state.guestsFilterName) {
+      const name = String(row.full_name || "").toLowerCase();
+      if (!name.includes(state.guestsFilterName)) return false;
+    }
+    return true;
+  });
+}
+
+function applyReservationsFilters(rows) {
+  return rows.filter((row) => {
+    if (state.reservationsFilterSource && row.source !== state.reservationsFilterSource) return false;
+    if (state.reservationsFilterDebt && row.debt_status !== state.reservationsFilterDebt) return false;
+    if (state.reservationsFilterName) {
+      const name = String(row.guest_name || "").toLowerCase();
+      if (!name.includes(state.reservationsFilterName)) return false;
+    }
+    return true;
+  });
+}
+
+function applyDocumentsFilters(rows) {
+  return rows.filter((row) => {
+    if (state.documentsFilterType && row.document_type !== state.documentsFilterType) return false;
+    return true;
+  });
+}
+
 function isReservationActiveOnDate(reservation, day) {
   const targetDay = toDateKey(day);
   const checkIn = toDateKey(reservation?.check_in);
@@ -560,7 +636,8 @@ async function loadAll() {
   const orderedExpenses = [...filteredExpenses].sort((a, b) => dateWeight(b.expense_date) - dateWeight(a.expense_date));
   const orderedDocuments = [...filteredDocuments].sort((a, b) => dateWeight(b.issue_date) - dateWeight(a.issue_date));
 
-  renderList("guests-list", orderedGuests, (row) => {
+  const guestsForView = applyGuestsFilters(orderedGuests);
+  renderList("guests-list", guestsForView, (row) => {
     const hasReservation = Boolean(row.reservation_id);
     const meta = hasReservation
       ? [
@@ -582,7 +659,8 @@ async function loadAll() {
     </li>`;
   });
 
-  renderList("reservations-list", orderedReservations, (row) => `<li class="record-item">
+  const reservationsForView = applyReservationsFilters(orderedReservations);
+  renderList("reservations-list", reservationsForView, (row) => `<li class="record-item">
       <div class="record-main">
         <span class="record-title">${row.guest_name}</span>
         <span class="record-id">#${row.id}</span>
@@ -601,20 +679,12 @@ async function loadAll() {
 
   renderSalesTable(salesForView);
 
-  renderList("expenses-list", orderedExpenses, (row) => `<li class="record-item">
-      <div class="record-main">
-        <span class="record-title">${row.category}</span>
-        <span class="record-id">#${row.id}</span>
-      </div>
-      <div class="record-meta">
-        ${chip(`Fecha ${formatDate(row.expense_date)}`)}
-        ${chip(`Pago ${paymentLabels[row.payment_method] || row.payment_method}`)}
-        ${chip(`Monto ${money.format(row.amount)}`)}
-      </div>
-      <div class="record-actions">${deleteButton("expenses", row.id)}</div>
-    </li>`);
+  const expensesForView = applyExpensesFilters(orderedExpenses);
+  renderExpensesKpis(expensesForView);
+  renderExpensesTable(expensesForView);
 
-  renderList("documents-list", orderedDocuments, (row) => `<li class="record-item">
+  const documentsForView = applyDocumentsFilters(orderedDocuments);
+  renderList("documents-list", documentsForView, (row) => `<li class="record-item">
       <div class="record-main">
         <span class="record-title">${row.document_type.toUpperCase()} ${row.document_number || "S/N"}</span>
         <span class="record-id">#${row.id}</span>
@@ -867,6 +937,101 @@ function bindSalesPagination() {
   });
 }
 
+function bindExpensesFilters() {
+  const payment = document.getElementById("expenses-filter-payment");
+  const category = document.getElementById("expenses-filter-category");
+  if (!payment || !category) return;
+
+  payment.addEventListener("change", async () => {
+    state.expensesFilterPayment = payment.value || "";
+    state.expensesPage = 1;
+    await loadAll();
+  });
+
+  category.addEventListener("input", async () => {
+    state.expensesFilterCategory = String(category.value || "").trim().toLowerCase();
+    state.expensesPage = 1;
+    await loadAll();
+  });
+}
+
+function bindExpensesPagination() {
+  const container = document.getElementById("expenses-pagination");
+  if (!container) return;
+  container.addEventListener("click", async (event) => {
+    const btn = event.target.closest("button[data-exp-pagination]");
+    if (!btn) return;
+    const direction = btn.getAttribute("data-exp-pagination");
+    const totalPages = Math.max(1, Math.ceil(state.expensesTotalRows / state.expensesPageSize));
+    if (direction === "prev" && state.expensesPage > 1) state.expensesPage -= 1;
+    if (direction === "next" && state.expensesPage < totalPages) state.expensesPage += 1;
+    await loadAll();
+  });
+  container.addEventListener("change", async (event) => {
+    const select = event.target.closest("#expenses-page-size");
+    if (!select) return;
+    state.expensesPageSize = Number(select.value) || 10;
+    state.expensesPage = 1;
+    await loadAll();
+  });
+}
+
+function bindGuestsFilters() {
+  const debt = document.getElementById("guests-filter-debt");
+  const name = document.getElementById("guests-filter-name");
+
+  if (debt) {
+    debt.addEventListener("change", async () => {
+      state.guestsFilterDebt = debt.value || "";
+      await loadAll();
+    });
+  }
+
+  if (name) {
+    name.addEventListener("input", async () => {
+      state.guestsFilterName = String(name.value || "").trim().toLowerCase();
+      await loadAll();
+    });
+  }
+}
+
+function bindReservationsFilters() {
+  const source = document.getElementById("reservations-filter-source");
+  const debt = document.getElementById("reservations-filter-debt");
+  const name = document.getElementById("reservations-filter-name");
+
+  if (source) {
+    source.addEventListener("change", async () => {
+      state.reservationsFilterSource = source.value || "";
+      await loadAll();
+    });
+  }
+
+  if (debt) {
+    debt.addEventListener("change", async () => {
+      state.reservationsFilterDebt = debt.value || "";
+      await loadAll();
+    });
+  }
+
+  if (name) {
+    name.addEventListener("input", async () => {
+      state.reservationsFilterName = String(name.value || "").trim().toLowerCase();
+      await loadAll();
+    });
+  }
+}
+
+function bindDocumentsFilters() {
+  const type = document.getElementById("documents-filter-type");
+  if (type) {
+    type.addEventListener("change", async () => {
+      state.documentsFilterType = type.value || "";
+      await loadAll();
+    });
+  }
+}
+
 for (const [formId, endpoint, message] of [
   ["guest-form", "/api/guests", "Huesped guardado"],
   ["sale-form", "/api/sales", "Venta registrada"],
@@ -882,6 +1047,11 @@ bindDeleteButtons();
 bindPeriodControls();
 bindSalesFilters();
 bindSalesPagination();
+bindExpensesFilters();
+bindExpensesPagination();
+bindGuestsFilters();
+bindReservationsFilters();
+bindDocumentsFilters();
 bindAvailabilityActions();
 setupAvailabilityControls();
 setupSectionModals();

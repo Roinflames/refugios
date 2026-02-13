@@ -17,6 +17,10 @@ Estas reglas aplican por defecto a todos los subrepos bajo `/home/rreyes/project
 ### Comandos operativos de chat
 - `#help`: mostrar lista de comandos disponibles con descripcion breve de cada uno.
 - `#rule <texto>`: agregar una nueva regla operativa al archivo de instrucciones del repo (sin borrar reglas existentes).
+- `#demo`: levantar el ambiente local (hacer `npm --prefix apps/refugios-mvp run start`) cuando sea necesario para pruebas.
+- `#version <número>`: actualizar el indicador `UI_VERSION` y cualquier otro widget visible para reflejar la nueva versión de la UI antes de documentar el deploy.
+- `#doc-version`: documentar el número actual de `UI_VERSION` en el `README.md` (sección de Deploy o equivalente) siempre que se haga un cambio visible de versión.
+- `#830`: actualizar la documentación técnica para reflejar cualquier cambio relevante del SRS IEEE 830, incluyendo secciones nuevas o revisiones de requisitos.
 
 ## Flujo estándar por proyecto
 1. Revisar estado Git y rama activa.

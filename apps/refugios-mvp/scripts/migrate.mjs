@@ -9,9 +9,11 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
+const connectionString = process.env.DATABASE_URL;
+const needsSsl = connectionString.includes("sslmode=require");
 const client = new Client({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  connectionString,
+  ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {})
 });
 
 const migrationsDir = path.join(process.cwd(), "db", "migrations");

@@ -1,6 +1,6 @@
 APP_NAME=refugios-mvp
 
-.PHONY: help install migrate seed dev start bootstrap check clean docker-build docker-up docker-down tunnel
+.PHONY: help install migrate seed dev start bootstrap check clean docker-build docker-up docker-down dev-up dev-down qa-up qa-down qa-seed tunnel
 
 help:
 	@echo "Targets disponibles:"
@@ -14,6 +14,11 @@ help:
 	@echo "  make docker-build- construye imagen Docker"
 	@echo "  make docker-up   - levanta app con Docker Compose"
 	@echo "  make docker-down - baja contenedor"
+	@echo "  make dev-up      - desarrollo con Podman (hot-reload + DB local)"
+	@echo "  make dev-down    - baja contenedores de desarrollo"
+	@echo "  make qa-up       - QA con Docker Compose (app + DB local aislada)"
+	@echo "  make qa-down     - baja contenedores de QA"
+	@echo "  make qa-seed     - carga datos demo en DB de QA"
 	@echo "  make tunnel      - expone localhost:3000 con TryCloudflare"
 	@echo "  make clean       - elimina node_modules"
 
@@ -57,6 +62,21 @@ docker-up:
 
 docker-down:
 	docker compose down
+
+dev-up:
+	podman compose -f docker-compose.dev.yml up -d --build
+
+dev-down:
+	podman compose -f docker-compose.dev.yml down
+
+qa-up:
+	docker compose up -d --build
+
+qa-down:
+	docker compose down -v
+
+qa-seed:
+	docker compose exec app npm run db:seed
 
 tunnel:
 	cloudflared tunnel --url http://localhost:3000

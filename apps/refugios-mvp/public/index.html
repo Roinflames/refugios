@@ -127,7 +127,7 @@
       <div id="status" class="status"></div>
 
       <!-- ── SECTION: Dashboard overview ── -->
-      <section class="section" id="section-dashboard">
+      <section class="section panel" id="section-dashboard">
         <div class="section__header">
           <div>
             <h1 class="section__title">Panel operativo</h1>
@@ -135,7 +135,6 @@
           </div>
           <div class="section__header-actions">
             <span class="badge badge--info" id="current-period">Período: Histórico acumulado</span>
-            <button class="btn btn--ghost" id="view-toggle">Ver por sección</button>
           </div>
         </div>
 
@@ -259,6 +258,21 @@
           </div>
           <button class="btn" data-modal-open="guest-modal">Nuevo huésped</button>
         </div>
+        <div class="section-filters">
+          <label class="filter-bar__field">
+            <span>Estado de deuda</span>
+            <select id="guests-filter-debt">
+              <option value="">Todos</option>
+              <option value="pending">Pendiente</option>
+              <option value="partial">Parcial</option>
+              <option value="paid">Pagado</option>
+            </select>
+          </label>
+          <label class="filter-bar__field">
+            <span>Buscar nombre</span>
+            <input type="text" id="guests-filter-name" placeholder="Filtrar por nombre…" />
+          </label>
+        </div>
         <ul class="record-list" id="guests-list"></ul>
       </section>
 
@@ -270,6 +284,33 @@
             <h2 class="section__title">Fechas y canales</h2>
           </div>
           <button class="btn" data-modal-open="reservation-modal">Agregar reserva</button>
+        </div>
+        <div class="section-filters">
+          <label class="filter-bar__field">
+            <span>Canal</span>
+            <select id="reservations-filter-source">
+              <option value="">Todos</option>
+              <option value="web">Web</option>
+              <option value="airbnb">Airbnb</option>
+              <option value="booking">Booking</option>
+              <option value="phone">Teléfono</option>
+              <option value="walkin">Mostrador</option>
+              <option value="other">Otro</option>
+            </select>
+          </label>
+          <label class="filter-bar__field">
+            <span>Estado de deuda</span>
+            <select id="reservations-filter-debt">
+              <option value="">Todos</option>
+              <option value="pending">Pendiente</option>
+              <option value="partial">Parcial</option>
+              <option value="paid">Pagado</option>
+            </select>
+          </label>
+          <label class="filter-bar__field">
+            <span>Buscar huésped</span>
+            <input type="text" id="reservations-filter-name" placeholder="Filtrar por nombre…" />
+          </label>
         </div>
         <ul class="record-list" id="reservations-list"></ul>
       </section>
@@ -344,7 +385,55 @@
           </div>
           <button class="btn" data-modal-open="expense-modal">Registrar gasto</button>
         </div>
-        <ul class="record-list" id="expenses-list"></ul>
+
+        <div class="section-kpis">
+          <div class="stat-card">
+            <span class="stat-card__number" id="expenses-kpi-total">$0</span>
+            <span class="stat-card__label">Total gastos</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__number" id="expenses-kpi-count">0</span>
+            <span class="stat-card__label">Registros</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__number" id="expenses-kpi-average">$0</span>
+            <span class="stat-card__label">Promedio</span>
+          </div>
+        </div>
+
+        <div class="section-filters">
+          <label class="filter-bar__field">
+            <span>Medio de pago</span>
+            <select id="expenses-filter-payment">
+              <option value="">Todos</option>
+              <option value="transfer">Transferencia</option>
+              <option value="card">Tarjeta</option>
+              <option value="cash">Efectivo</option>
+              <option value="mercadopago">MercadoPago</option>
+              <option value="other">Otro</option>
+            </select>
+          </label>
+          <label class="filter-bar__field">
+            <span>Categoría</span>
+            <input type="text" id="expenses-filter-category" placeholder="Filtrar categoría…" />
+          </label>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Categoría</th>
+                <th>Pago</th>
+                <th>Monto</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="expenses-table-body"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="expenses-pagination"></div>
       </section>
 
       <!-- ── SECTION: Documents ── -->
@@ -355,6 +444,18 @@
             <h2 class="section__title">Boletas y facturas</h2>
           </div>
           <button class="btn" data-modal-open="document-modal">Subir documento</button>
+        </div>
+        <div class="section-filters">
+          <label class="filter-bar__field">
+            <span>Tipo</span>
+            <select id="documents-filter-type">
+              <option value="">Todos</option>
+              <option value="boleta">Boleta</option>
+              <option value="factura">Factura</option>
+              <option value="nota_credito">Nota de crédito</option>
+              <option value="otro">Otro</option>
+            </select>
+          </label>
         </div>
         <ul class="record-list" id="documents-list"></ul>
       </section>
