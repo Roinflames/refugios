@@ -1,5 +1,5 @@
 const money = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
-const UI_VERSION = "0.3.0";
+const UI_VERSION = "0.4.0";
 
 const paymentLabels = {
   transfer: "Transferencia",
@@ -43,6 +43,54 @@ function setupThemeToggle() {
 function setUiVersion() {
   const el = document.getElementById("ui-version");
   if (el) el.textContent = `UI v${UI_VERSION}`;
+}
+
+function setupFocusMode() {
+  const mq = window.matchMedia("(max-width: 739px)");
+  const navLinks = [...document.querySelectorAll(".quick-nav a")];
+  const panels = [...document.querySelectorAll(".panel")];
+  const toggle = document.getElementById("view-toggle");
+
+  const setActivePanel = (id) => {
+    panels.forEach((panel) => panel.classList.toggle("is-active", `#${panel.id}` === id));
+    navLinks.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === id));
+  };
+
+  const applyMode = () => {
+    const isFocus = localStorage.getItem("focus_mode") !== "all";
+    if (mq.matches && isFocus) {
+      document.body.classList.add("focus-mode");
+      if (!document.querySelector(".panel.is-active")) setActivePanel("#section-reservations");
+      if (toggle) toggle.textContent = "Ver todo";
+    } else {
+      document.body.classList.remove("focus-mode");
+      panels.forEach((panel) => panel.classList.add("is-active"));
+      navLinks.forEach((link) => link.classList.remove("active"));
+      if (toggle) toggle.textContent = "Modo enfoque";
+    }
+  };
+
+  navLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      const id = link.getAttribute("href");
+      if (!id) return;
+      if (document.body.classList.contains("focus-mode")) {
+        event.preventDefault();
+        setActivePanel(id);
+      }
+    });
+  });
+
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      const isFocus = document.body.classList.contains("focus-mode");
+      localStorage.setItem("focus_mode", isFocus ? "all" : "focus");
+      applyMode();
+    });
+  }
+
+  mq.addEventListener("change", applyMode);
+  applyMode();
 }
 
 function toPayload(form) {
@@ -302,6 +350,7 @@ for (const [formId, endpoint, message] of [
 bindDeleteButtons();
 setupThemeToggle();
 setUiVersion();
+setupFocusMode();
 
 setStatus("Cargando panel...");
 loadAll()
