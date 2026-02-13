@@ -1,5 +1,5 @@
 const money = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
-const UI_VERSION = "0.2.0";
+const UI_VERSION = "0.3.0";
 
 const paymentLabels = {
   transfer: "Transferencia",
@@ -112,6 +112,18 @@ function deleteButton(type, id) {
   return `<button type="button" class="btn-delete" data-delete-type="${type}" data-id="${id}">Eliminar</button>`;
 }
 
+function debtPriority(status) {
+  if (status === "pending") return 0;
+  if (status === "partial") return 1;
+  if (status === "paid") return 2;
+  return 3;
+}
+
+function dateWeight(value) {
+  const ts = Date.parse(value || "");
+  return Number.isFinite(ts) ? ts : 0;
+}
+
 async function loadSummary() {
   const data = await api("/api/dashboard/summary");
   const cards = [
@@ -137,7 +149,23 @@ async function loadAll() {
     api("/api/documents")
   ]);
 
-  renderList("guests-list", guests, (row) => {
+  const orderedGuests = [...guests].sort((a, b) => {
+    const debtDiff = debtPriority(a.reservation_debt_status) - debtPriority(b.reservation_debt_status);
+    if (debtDiff !== 0) return debtDiff;
+    return dateWeight(b.reservation_check_in) - dateWeight(a.reservation_check_in);
+  });
+
+  const orderedReservations = [...reservations].sort((a, b) => {
+    const debtDiff = debtPriority(a.debt_status) - debtPriority(b.debt_status);
+    if (debtDiff !== 0) return debtDiff;
+    return dateWeight(a.check_in) - dateWeight(b.check_in);
+  });
+
+  const orderedSales = [...sales].sort((a, b) => dateWeight(b.sale_date) - dateWeight(a.sale_date));
+  const orderedExpenses = [...expenses].sort((a, b) => dateWeight(b.expense_date) - dateWeight(a.expense_date));
+  const orderedDocuments = [...documents].sort((a, b) => dateWeight(b.issue_date) - dateWeight(a.issue_date));
+
+  renderList("guests-list", orderedGuests, (row) => {
     const hasReservation = Boolean(row.reservation_id);
     const meta = hasReservation
       ? [
@@ -159,7 +187,7 @@ async function loadAll() {
     </li>`;
   });
 
-  renderList("reservations-list", reservations, (row) => `<li class="record-item">
+  renderList("reservations-list", orderedReservations, (row) => `<li class="record-item">
       <div class="record-main">
         <span class="record-title">${row.guest_name}</span>
         <span class="record-id">#${row.id}</span>
@@ -176,7 +204,7 @@ async function loadAll() {
       <div class="record-actions">${deleteButton("reservations", row.id)}</div>
     </li>`);
 
-  renderList("sales-list", sales, (row) => `<li class="record-item">
+  renderList("sales-list", orderedSales, (row) => `<li class="record-item">
       <div class="record-main">
         <span class="record-title">${row.category}</span>
         <span class="record-id">#${row.id}</span>
@@ -189,7 +217,7 @@ async function loadAll() {
       <div class="record-actions">${deleteButton("sales", row.id)}</div>
     </li>`);
 
-  renderList("expenses-list", expenses, (row) => `<li class="record-item">
+  renderList("expenses-list", orderedExpenses, (row) => `<li class="record-item">
       <div class="record-main">
         <span class="record-title">${row.category}</span>
         <span class="record-id">#${row.id}</span>
@@ -202,7 +230,7 @@ async function loadAll() {
       <div class="record-actions">${deleteButton("expenses", row.id)}</div>
     </li>`);
 
-  renderList("documents-list", documents, (row) => `<li class="record-item">
+  renderList("documents-list", orderedDocuments, (row) => `<li class="record-item">
       <div class="record-main">
         <span class="record-title">${row.document_type.toUpperCase()} ${row.document_number || "S/N"}</span>
         <span class="record-id">#${row.id}</span>
