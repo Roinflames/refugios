@@ -144,6 +144,7 @@ loadAll()
   .then(() => setStatus("Panel actualizado", "ok"))
   .catch((error) => {
     console.error(error);
-    setStatus("No se pudo cargar el panel. Revisa DATABASE_URL y migraciones.", "error");
-    alert("No se pudo cargar el panel. Revisa DATABASE_URL y migraciones.");
+    const message = `No se pudo cargar el panel: ${error.message}`;
+    setStatus(message, "error");
+    alert(message);
   });
