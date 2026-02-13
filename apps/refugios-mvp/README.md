@@ -41,6 +41,19 @@ Con la app corriendo local (normal o docker):
 make tunnel
 ```
 
+## Verificar deploy sin entrar a Render
+Desde la raiz del repo:
+```bash
+./tools/check-render-deploy.sh https://tu-app.onrender.com
+```
+
+Opcional (estado del ultimo deploy por API de Render):
+```bash
+export RENDER_API_KEY=...
+export RENDER_SERVICE_ID=srv-...
+./tools/check-render-deploy.sh https://tu-app.onrender.com
+```
+
 ## Migraciones
 - SQL versionado en `db/migrations`
 - Tabla de control `schema_migrations`
