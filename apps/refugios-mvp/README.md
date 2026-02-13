@@ -52,6 +52,12 @@ Push + esperar deploy OK:
 ./tools/push-and-wait-render.sh https://tu-app.onrender.com
 ```
 
+Disparar Deploy Hook + esperar deploy OK:
+```bash
+export RENDER_DEPLOY_HOOK_URL='https://api.render.com/deploy/srv-...?key=...'
+./tools/deploy-and-wait-render.sh https://tu-app.onrender.com
+```
+
 Opcional (estado del ultimo deploy por API de Render):
 ```bash
 export RENDER_API_KEY=...
