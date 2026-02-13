@@ -1,0 +1,117 @@
+:root {
+  --bg: #f5f5f2;
+  --paper: #ffffff;
+  --ink: #111111;
+  --muted: #666666;
+  --line: #deded8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: radial-gradient(circle at top, #ffffff 0%, var(--bg) 65%);
+  color: var(--ink);
+}
+
+header {
+  padding: 24px 20px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+h1, h2 {
+  margin: 0 0 8px;
+}
+
+header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+main {
+  padding: 20px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.card span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.card strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 22px;
+}
+
+.grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+article {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+form {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+input,
+select,
+button {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+}
+
+button {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 220px;
+  overflow: auto;
+}
+
+li {
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  main {
+    padding: 12px;
+  }
+}

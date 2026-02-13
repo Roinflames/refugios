@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: __PROJECT_NAME__
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20

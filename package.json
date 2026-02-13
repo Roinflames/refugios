@@ -1,0 +1,9 @@
+{
+  "name": "deploy-boilerplate-factory",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "new": "node tools/create-boilerplate.mjs",
+    "notify:test": "./tools/notify-whatsapp.sh \"Prueba Codex finalizado\""
+  }
+}

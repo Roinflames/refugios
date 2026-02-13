@@ -1,0 +1,3 @@
+guest_name,guest_email,guest_phone,source,payment_method,status,check_in,check_out,guests_count,total_amount,notes
+Ana Perez,ana@example.com,+56911111111,airbnb,card,completed,2025-01-10,2025-01-12,2,160000,Migracion Airbnb
+Luis Soto,luis@example.com,+56922222222,booking,transfer,completed,2025-02-03,2025-02-05,4,240000,Migracion Booking

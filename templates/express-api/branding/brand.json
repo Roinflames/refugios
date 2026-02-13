@@ -1,0 +1,7 @@
+{
+  "name": "__PROJECT_NAME__",
+  "displayName": "__PROJECT_NAME__",
+  "logoPath": "branding/logo.png",
+  "primaryColor": "#111111",
+  "secondaryColor": "#f3f3f3"
+}
