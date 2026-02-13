@@ -6,9 +6,24 @@ const router = Router();
 router.get("/", async (_req, res, next) => {
   try {
     const result = await query(
-      `SELECT r.*, g.full_name AS guest_name
+      `SELECT
+         r.*,
+         g.full_name AS guest_name,
+         COALESCE(sales_totals.paid_amount, 0)::numeric(12,2) AS paid_amount,
+         GREATEST(r.total_amount - COALESCE(sales_totals.paid_amount, 0), 0)::numeric(12,2) AS amount_due,
+         CASE
+           WHEN COALESCE(sales_totals.paid_amount, 0) >= r.total_amount THEN 'paid'
+           WHEN COALESCE(sales_totals.paid_amount, 0) > 0 THEN 'partial'
+           ELSE 'pending'
+         END AS debt_status
        FROM reservations r
        JOIN guests g ON g.id = r.guest_id
+       LEFT JOIN (
+         SELECT reservation_id, SUM(amount) AS paid_amount
+         FROM sales
+         WHERE reservation_id IS NOT NULL
+         GROUP BY reservation_id
+       ) sales_totals ON sales_totals.reservation_id = r.id
        ORDER BY r.check_in DESC`
     );
     res.json(result.rows);

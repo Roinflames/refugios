@@ -45,6 +45,13 @@ function renderList(id, rows, formatter) {
   container.innerHTML = rows.map(formatter).join("");
 }
 
+function debtLabel(status, amountDue) {
+  if (status === "paid") return "No debe";
+  if (status === "partial") return `Debe ${money.format(amountDue || 0)}`;
+  if (status === "pending") return `Debe ${money.format(amountDue || 0)}`;
+  return "Sin estado";
+}
+
 async function loadSummary() {
   const data = await api("/api/dashboard/summary");
   const cards = [
@@ -70,11 +77,28 @@ async function loadAll() {
     api("/api/documents")
   ]);
 
-  renderList("guests-list", guests, (row) => `<li>#${row.id} ${row.full_name} ${row.phone ? `- ${row.phone}` : ""}</li>`);
+  renderList("guests-list", guests, (row) => {
+    if (!row.reservation_id) {
+      return `<li>#${row.id} ${row.full_name} ${row.phone ? `- ${row.phone}` : ""}<br><small>Sin reservas asociadas</small></li>`;
+    }
+
+    return `<li>
+      #${row.id} ${row.full_name} ${row.phone ? `- ${row.phone}` : ""}
+      <br><small>Canal: ${row.reservation_source} | Llega: ${row.reservation_check_in} | Sale: ${row.reservation_check_out}</small>
+      <br><small>Pago: ${row.reservation_payment_method} | ${debtLabel(row.reservation_debt_status, row.reservation_amount_due)}</small>
+    </li>`;
+  });
   renderList(
     "reservations-list",
     reservations,
-    (row) => `<li>#${row.id} ${row.guest_name} | ${row.source} | ${row.check_in} a ${row.check_out} | ${money.format(row.total_amount)}</li>`
+    (row) => `<li>
+      #${row.id} ${row.guest_name}
+      <br><small>Canal: ${row.source} | Llega: ${row.check_in} | Sale: ${row.check_out}</small>
+      <br><small>Pago: ${row.payment_method} | Total: ${money.format(row.total_amount)} | Abonado: ${money.format(row.paid_amount || 0)} | ${debtLabel(
+        row.debt_status,
+        row.amount_due
+      )}</small>
+    </li>`
   );
   renderList("sales-list", sales, (row) => `<li>#${row.id} ${row.sale_date} | ${row.category} | ${money.format(row.amount)}</li>`);
   renderList("expenses-list", expenses, (row) => `<li>#${row.id} ${row.expense_date} | ${row.category} | ${money.format(row.amount)}</li>`);
