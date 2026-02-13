@@ -7,16 +7,28 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <header>
-      <h1>Refugios Malalcahuello</h1>
-      <p>Panel operativo: reservas, ventas, gastos, huéspedes y documentos</p>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Panel operativo</p>
+        <h1>Refugios Malalcahuello</h1>
+        <p class="subtitle">Reservas, ventas, gastos, huéspedes y documentos</p>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
     </header>
 
+    <nav class="quick-nav" aria-label="Secciones principales">
+      <a href="#section-guests">Huéspedes</a>
+      <a href="#section-reservations">Reservas</a>
+      <a href="#section-sales">Ventas</a>
+      <a href="#section-expenses">Gastos</a>
+      <a href="#section-documents">Documentos</a>
+    </nav>
+
     <main>
-      <section class="cards" id="summary"></section>
+      <section class="cards" id="summary" aria-label="Resumen"></section>
 
       <section class="grid">
-        <article>
+        <article id="section-guests" class="panel">
           <h2>Huéspedes</h2>
           <form id="guest-form">
             <input name="full_name" placeholder="Nombre completo" required />
@@ -27,7 +39,7 @@
           <ul id="guests-list"></ul>
         </article>
 
-        <article>
+        <article id="section-reservations" class="panel">
           <h2>Reservas</h2>
           <form id="reservation-form">
             <input name="guest_id" placeholder="ID huésped" required />
@@ -55,7 +67,7 @@
           <ul id="reservations-list"></ul>
         </article>
 
-        <article>
+        <article id="section-sales" class="panel">
           <h2>Ventas</h2>
           <form id="sale-form">
             <input name="reservation_id" placeholder="ID reserva (opcional)" />
@@ -74,7 +86,7 @@
           <ul id="sales-list"></ul>
         </article>
 
-        <article>
+        <article id="section-expenses" class="panel">
           <h2>Gastos</h2>
           <form id="expense-form">
             <input name="category" placeholder="Categoría" required />
@@ -92,7 +104,7 @@
           <ul id="expenses-list"></ul>
         </article>
 
-        <article>
+        <article id="section-documents" class="panel">
           <h2>Boletas / Facturas</h2>
           <form id="document-form">
             <input name="reservation_id" placeholder="ID reserva (opcional)" />

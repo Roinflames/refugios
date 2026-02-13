@@ -20,6 +20,12 @@ function normalize(body) {
   return output;
 }
 
+function setStatus(message, type = "") {
+  const status = document.getElementById("status");
+  status.textContent = message;
+  status.className = `status ${type}`.trim();
+}
+
 async function api(path, options = {}) {
   const response = await fetch(path, {
     headers: { "Content-Type": "application/json" },
@@ -79,33 +85,41 @@ async function loadAll() {
   );
 }
 
-function bindForm(id, endpoint) {
+function bindForm(id, endpoint, successMessage) {
   const form = document.getElementById(id);
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const payload = normalize(toPayload(form));
 
+    setStatus("Guardando...", "");
+
     try {
       await api(endpoint, { method: "POST", body: JSON.stringify(payload) });
       form.reset();
       await loadAll();
+      setStatus(successMessage, "ok");
     } catch (error) {
+      setStatus(error.message, "error");
       alert(error.message);
     }
   });
 }
 
-for (const [formId, endpoint] of [
-  ["guest-form", "/api/guests"],
-  ["reservation-form", "/api/reservations"],
-  ["sale-form", "/api/sales"],
-  ["expense-form", "/api/expenses"],
-  ["document-form", "/api/documents"]
+for (const [formId, endpoint, message] of [
+  ["guest-form", "/api/guests", "Huésped guardado"],
+  ["reservation-form", "/api/reservations", "Reserva guardada"],
+  ["sale-form", "/api/sales", "Venta registrada"],
+  ["expense-form", "/api/expenses", "Gasto registrado"],
+  ["document-form", "/api/documents", "Documento registrado"]
 ]) {
-  bindForm(formId, endpoint);
+  bindForm(formId, endpoint, message);
 }
 
-loadAll().catch((error) => {
-  console.error(error);
-  alert("No se pudo cargar el panel. Revisa DATABASE_URL y migraciones.");
-});
+setStatus("Cargando panel...");
+loadAll()
+  .then(() => setStatus("Panel actualizado", "ok"))
+  .catch((error) => {
+    console.error(error);
+    setStatus("No se pudo cargar el panel. Revisa DATABASE_URL y migraciones.", "error");
+    alert("No se pudo cargar el panel. Revisa DATABASE_URL y migraciones.");
+  });
