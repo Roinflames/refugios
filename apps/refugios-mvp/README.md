@@ -47,6 +47,11 @@ Desde la raiz del repo:
 ./tools/check-render-deploy.sh https://tu-app.onrender.com
 ```
 
+Push + esperar deploy OK:
+```bash
+./tools/push-and-wait-render.sh https://tu-app.onrender.com
+```
+
 Opcional (estado del ultimo deploy por API de Render):
 ```bash
 export RENDER_API_KEY=...
