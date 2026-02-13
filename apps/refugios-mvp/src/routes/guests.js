@@ -62,4 +62,24 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+router.delete("/:id", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "id invalido" });
+  }
+
+  try {
+    const result = await query("DELETE FROM guests WHERE id = $1 RETURNING id", [id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Huesped no encontrado" });
+    }
+    return res.json({ ok: true, id });
+  } catch (error) {
+    if (error?.code === "23503") {
+      return res.status(409).json({ error: "No se puede eliminar el huesped porque tiene reservas asociadas" });
+    }
+    return next(error);
+  }
+});
+
 export default router;

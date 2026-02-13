@@ -47,4 +47,21 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+router.delete("/:id", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "id invalido" });
+  }
+
+  try {
+    const result = await query("DELETE FROM documents WHERE id = $1 RETURNING id", [id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Documento no encontrado" });
+    }
+    return res.json({ ok: true, id });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 export default router;

@@ -1,5 +1,44 @@
 const money = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
 
+const paymentLabels = {
+  transfer: "Transferencia",
+  card: "Tarjeta",
+  cash: "Efectivo",
+  mercadopago: "MercadoPago",
+  other: "Otro"
+};
+
+const sourceLabels = {
+  web: "Web",
+  airbnb: "Airbnb",
+  booking: "Booking",
+  phone: "Telefono",
+  walkin: "Mostrador",
+  other: "Otro"
+};
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem("theme", theme);
+  const button = document.getElementById("theme-toggle");
+  if (button) {
+    button.textContent = theme === "dark" ? "Tema claro" : "Tema oscuro";
+  }
+}
+
+function setupThemeToggle() {
+  const savedTheme = localStorage.getItem("theme");
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme(savedTheme || (prefersDark ? "dark" : "light"));
+
+  const button = document.getElementById("theme-toggle");
+  if (!button) return;
+  button.addEventListener("click", () => {
+    const current = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+    applyTheme(current === "dark" ? "light" : "dark");
+  });
+}
+
 function toPayload(form) {
   const data = new FormData(form);
   return Object.fromEntries(data.entries());
@@ -52,6 +91,21 @@ function debtLabel(status, amountDue) {
   return "Sin estado";
 }
 
+function debtClass(status) {
+  if (status === "paid") return "debt-paid";
+  if (status === "partial") return "debt-partial";
+  if (status === "pending") return "debt-pending";
+  return "";
+}
+
+function chip(label, className = "") {
+  return `<span class="chip ${className}">${label}</span>`;
+}
+
+function deleteButton(type, id) {
+  return `<button type="button" class="btn-delete" data-delete-type="${type}" data-id="${id}">Eliminar</button>`;
+}
+
 async function loadSummary() {
   const data = await api("/api/dashboard/summary");
   const cards = [
@@ -78,35 +132,83 @@ async function loadAll() {
   ]);
 
   renderList("guests-list", guests, (row) => {
-    if (!row.reservation_id) {
-      return `<li>#${row.id} ${row.full_name} ${row.phone ? `- ${row.phone}` : ""}<br><small>Sin reservas asociadas</small></li>`;
-    }
+    const hasReservation = Boolean(row.reservation_id);
+    const meta = hasReservation
+      ? [
+          chip(`Canal ${sourceLabels[row.reservation_source] || row.reservation_source}`),
+          chip(`Llega ${row.reservation_check_in}`),
+          chip(`Sale ${row.reservation_check_out}`),
+          chip(`Pago ${paymentLabels[row.reservation_payment_method] || row.reservation_payment_method}`),
+          chip(debtLabel(row.reservation_debt_status, row.reservation_amount_due), debtClass(row.reservation_debt_status))
+        ].join("")
+      : chip("Sin reservas asociadas");
 
-    return `<li>
-      #${row.id} ${row.full_name} ${row.phone ? `- ${row.phone}` : ""}
-      <br><small>Canal: ${row.reservation_source} | Llega: ${row.reservation_check_in} | Sale: ${row.reservation_check_out}</small>
-      <br><small>Pago: ${row.reservation_payment_method} | ${debtLabel(row.reservation_debt_status, row.reservation_amount_due)}</small>
+    return `<li class="record-item">
+      <div class="record-main">
+        <span class="record-title">${row.full_name}</span>
+        <span class="record-id">#${row.id}</span>
+      </div>
+      <div class="record-meta">${meta}</div>
+      <div class="record-actions">${deleteButton("guests", row.id)}</div>
     </li>`;
   });
-  renderList(
-    "reservations-list",
-    reservations,
-    (row) => `<li>
-      #${row.id} ${row.guest_name}
-      <br><small>Canal: ${row.source} | Llega: ${row.check_in} | Sale: ${row.check_out}</small>
-      <br><small>Pago: ${row.payment_method} | Total: ${money.format(row.total_amount)} | Abonado: ${money.format(row.paid_amount || 0)} | ${debtLabel(
-        row.debt_status,
-        row.amount_due
-      )}</small>
-    </li>`
-  );
-  renderList("sales-list", sales, (row) => `<li>#${row.id} ${row.sale_date} | ${row.category} | ${money.format(row.amount)}</li>`);
-  renderList("expenses-list", expenses, (row) => `<li>#${row.id} ${row.expense_date} | ${row.category} | ${money.format(row.amount)}</li>`);
-  renderList(
-    "documents-list",
-    documents,
-    (row) => `<li>#${row.id} ${row.document_type.toUpperCase()} ${row.document_number || "s/n"} | ${row.issue_date} | ${money.format(row.amount)}</li>`
-  );
+
+  renderList("reservations-list", reservations, (row) => `<li class="record-item">
+      <div class="record-main">
+        <span class="record-title">${row.guest_name}</span>
+        <span class="record-id">#${row.id}</span>
+      </div>
+      <div class="record-meta">
+        ${chip(`Canal ${sourceLabels[row.source] || row.source}`)}
+        ${chip(`Llega ${row.check_in}`)}
+        ${chip(`Sale ${row.check_out}`)}
+        ${chip(`Pago ${paymentLabels[row.payment_method] || row.payment_method}`)}
+        ${chip(`Total ${money.format(row.total_amount)}`)}
+        ${chip(`Abonado ${money.format(row.paid_amount || 0)}`)}
+        ${chip(debtLabel(row.debt_status, row.amount_due), debtClass(row.debt_status))}
+      </div>
+      <div class="record-actions">${deleteButton("reservations", row.id)}</div>
+    </li>`);
+
+  renderList("sales-list", sales, (row) => `<li class="record-item">
+      <div class="record-main">
+        <span class="record-title">${row.category}</span>
+        <span class="record-id">#${row.id}</span>
+      </div>
+      <div class="record-meta">
+        ${chip(`Fecha ${row.sale_date}`)}
+        ${chip(`Pago ${paymentLabels[row.payment_method] || row.payment_method}`)}
+        ${chip(`Monto ${money.format(row.amount)}`)}
+      </div>
+      <div class="record-actions">${deleteButton("sales", row.id)}</div>
+    </li>`);
+
+  renderList("expenses-list", expenses, (row) => `<li class="record-item">
+      <div class="record-main">
+        <span class="record-title">${row.category}</span>
+        <span class="record-id">#${row.id}</span>
+      </div>
+      <div class="record-meta">
+        ${chip(`Fecha ${row.expense_date}`)}
+        ${chip(`Pago ${paymentLabels[row.payment_method] || row.payment_method}`)}
+        ${chip(`Monto ${money.format(row.amount)}`)}
+      </div>
+      <div class="record-actions">${deleteButton("expenses", row.id)}</div>
+    </li>`);
+
+  renderList("documents-list", documents, (row) => `<li class="record-item">
+      <div class="record-main">
+        <span class="record-title">${row.document_type.toUpperCase()} ${row.document_number || "S/N"}</span>
+        <span class="record-id">#${row.id}</span>
+      </div>
+      <div class="record-meta">
+        ${chip(`Fecha ${row.issue_date}`)}
+        ${chip(`Monto ${money.format(row.amount)}`)}
+        ${row.reservation_id ? chip(`Reserva #${row.reservation_id}`) : ""}
+        ${row.sale_id ? chip(`Venta #${row.sale_id}`) : ""}
+      </div>
+      <div class="record-actions">${deleteButton("documents", row.id)}</div>
+    </li>`);
 }
 
 function bindForm(id, endpoint, successMessage) {
@@ -129,8 +231,32 @@ function bindForm(id, endpoint, successMessage) {
   });
 }
 
+function bindDeleteButtons() {
+  document.body.addEventListener("click", async (event) => {
+    const button = event.target.closest(".btn-delete");
+    if (!button) return;
+
+    const { deleteType, id } = button.dataset;
+    if (!deleteType || !id) return;
+
+    const confirmed = window.confirm(`Eliminar registro #${id}? Esta accion no se puede deshacer.`);
+    if (!confirmed) return;
+
+    setStatus("Eliminando...", "");
+
+    try {
+      await api(`/api/${deleteType}/${id}`, { method: "DELETE" });
+      await loadAll();
+      setStatus(`Registro #${id} eliminado`, "ok");
+    } catch (error) {
+      setStatus(error.message, "error");
+      alert(error.message);
+    }
+  });
+}
+
 for (const [formId, endpoint, message] of [
-  ["guest-form", "/api/guests", "Huésped guardado"],
+  ["guest-form", "/api/guests", "Huesped guardado"],
   ["reservation-form", "/api/reservations", "Reserva guardada"],
   ["sale-form", "/api/sales", "Venta registrada"],
   ["expense-form", "/api/expenses", "Gasto registrado"],
@@ -138,6 +264,9 @@ for (const [formId, endpoint, message] of [
 ]) {
   bindForm(formId, endpoint, message);
 }
+
+bindDeleteButtons();
+setupThemeToggle();
 
 setStatus("Cargando panel...");
 loadAll()
