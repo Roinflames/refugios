@@ -44,6 +44,18 @@ app.use((error, _req, res, _next) => {
   if (error?.code === "28P01") {
     return res.status(503).json({ error: "Credenciales de base de datos invalidas." });
   }
+  if (error?.code === "23503") {
+    return res.status(400).json({ error: "Referencia invalida: verifica huésped, reserva o venta relacionada." });
+  }
+  if (error?.code === "23514") {
+    return res.status(400).json({ error: "Dato fuera de catálogo permitido (canal, estado, documento o forma de pago)." });
+  }
+  if (error?.code === "22P02") {
+    return res.status(400).json({ error: "Formato de dato invalido en la solicitud." });
+  }
+  if (error?.code === "23502") {
+    return res.status(400).json({ error: "Faltan campos obligatorios." });
+  }
   res.status(500).json({ error: "Error interno del servidor" });
 });
 

@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Refugios Malalcahuello - Gestión</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -18,6 +24,11 @@
         <p class="eyebrow">Panel operativo</p>
         <h1>Refugios Malalcahuello</h1>
         <p class="subtitle">Control diario de reservas, pagos y operación</p>
+        <div class="value-strip" aria-label="Beneficios operativos">
+          <span>Menos coordinación manual</span>
+          <span>Más control de ingresos y gastos</span>
+          <span>Seguimiento por período</span>
+        </div>
       </div>
       <div class="topbar-actions">
         <button id="view-toggle" type="button" class="theme-toggle" aria-label="Cambiar vista">Ver todo</button>
@@ -26,114 +37,244 @@
       </div>
     </header>
 
-    <nav class="quick-nav" aria-label="Secciones principales">
-      <a href="#section-guests">Huéspedes</a>
-      <a href="#section-reservations">Reservas</a>
-      <a href="#section-sales">Ventas</a>
-      <a href="#section-expenses">Gastos</a>
-      <a href="#section-documents">Documentos</a>
-    </nav>
-
     <main class="app-main">
-      <section class="summary-wrap">
-        <h2 class="summary-title">Resumen</h2>
-        <section class="cards" id="summary" aria-label="Resumen"></section>
-      </section>
+      <div class="layout-shell">
+        <aside class="quick-nav-wrap">
+          <p class="quick-nav-title">Secciones</p>
+          <nav class="quick-nav" aria-label="Secciones principales">
+            <a href="#section-availability">Disponibilidad</a>
+            <a href="#section-guests">Huéspedes</a>
+            <a href="#section-reservations">Reservas</a>
+            <a href="#section-sales">Ventas</a>
+            <a href="#section-expenses">Gastos</a>
+            <a href="#section-documents">Documentos</a>
+          </nav>
+        </aside>
 
-      <section class="grid">
-        <article id="section-guests" class="panel">
-          <h2>Huéspedes</h2>
-          <form id="guest-form">
-            <input name="full_name" placeholder="Nombre completo" required />
-            <input name="email" placeholder="Email" />
-            <input name="phone" placeholder="Teléfono" />
-            <button type="submit">Guardar huésped</button>
-          </form>
-          <ul id="guests-list"></ul>
-        </article>
+        <div class="content-stack">
+          <section class="summary-wrap">
+            <h2 class="summary-title">Radar financiero y operativo</h2>
+            <p class="summary-helper">
+              Priorizado para filtros por período, categoría y canal por sobre visualizaciones complejas.
+            </p>
+            <section class="period-bar" aria-label="Filtro de periodo">
+              <p id="current-period" class="period-label">Período: Histórico acumulado</p>
+              <div class="period-controls">
+                <input id="period-from" type="date" aria-label="Desde" />
+                <input id="period-to" type="date" aria-label="Hasta" />
+                <button id="period-apply" type="button">Aplicar período</button>
+                <button id="period-clear" type="button" class="period-clear">Limpiar</button>
+              </div>
+            </section>
+            <section class="cards" id="summary" aria-label="Resumen"></section>
+          </section>
 
-        <article id="section-reservations" class="panel">
-          <h2>Reservas</h2>
-          <form id="reservation-form">
-            <input name="guest_id" placeholder="ID huésped" required />
-            <select name="source" required>
-              <option value="web">Web</option>
-              <option value="airbnb">Airbnb</option>
-              <option value="booking">Booking</option>
-              <option value="phone">Teléfono</option>
-              <option value="walkin">Mostrador</option>
-              <option value="other">Otro</option>
-            </select>
-            <select name="payment_method" required>
-              <option value="transfer">Transferencia</option>
-              <option value="card">Tarjeta</option>
-              <option value="cash">Efectivo</option>
-              <option value="mercadopago">MercadoPago</option>
-              <option value="other">Otro</option>
-            </select>
-            <input name="check_in" type="date" required />
-            <input name="check_out" type="date" required />
-            <input name="guests_count" type="number" min="1" value="1" required />
-            <input name="total_amount" type="number" step="0.01" placeholder="Monto total" required />
-            <button type="submit">Guardar reserva</button>
-          </form>
-          <ul id="reservations-list"></ul>
-        </article>
+          <section class="grid">
+            <article id="section-availability" class="panel">
+              <div class="panel-head">
+                <h2>Disponibilidad de Cabañas</h2>
+                <p class="section-intro">Vista rápida de ocupación por fecha para gestionar entradas y salidas.</p>
+              </div>
+              <section class="availability-toolbar">
+                <label class="availability-field">
+                  <span>Fecha de consulta</span>
+                  <input id="availability-date" type="date" />
+                </label>
+                <div class="availability-capacity">
+                  <span>Total cabañas</span>
+                  <div class="capacity-controls">
+                    <button id="cabins-dec" type="button" aria-label="Disminuir cabañas">-</button>
+                    <strong id="cabins-total">0</strong>
+                    <button id="cabins-inc" type="button" aria-label="Aumentar cabañas">+</button>
+                  </div>
+                </div>
+              </section>
+              <section class="availability-kpis">
+                <div class="availability-card">
+                  <span>Ocupadas</span>
+                  <strong id="cabins-occupied">0</strong>
+                </div>
+                <div class="availability-card">
+                  <span>Disponibles</span>
+                  <strong id="cabins-free">0</strong>
+                </div>
+                <div class="availability-card">
+                  <span>Ocupación</span>
+                  <strong id="cabins-occupancy">0%</strong>
+                </div>
+              </section>
+              <ul id="availability-grid" class="availability-grid"></ul>
+              <ul id="availability-reservations" class="availability-reservations"></ul>
+            </article>
 
-        <article id="section-sales" class="panel">
-          <h2>Ventas</h2>
-          <form id="sale-form">
-            <input name="reservation_id" placeholder="ID reserva (opcional)" />
-            <input name="category" placeholder="Categoría" value="lodging" />
-            <input name="amount" type="number" step="0.01" placeholder="Monto" required />
-            <select name="payment_method" required>
-              <option value="transfer">Transferencia</option>
-              <option value="card">Tarjeta</option>
-              <option value="cash">Efectivo</option>
-              <option value="mercadopago">MercadoPago</option>
-              <option value="other">Otro</option>
-            </select>
-            <input name="sale_date" type="date" required />
-            <button type="submit">Registrar venta</button>
-          </form>
-          <ul id="sales-list"></ul>
-        </article>
+            <article id="section-guests" class="panel">
+              <div class="panel-head panel-head-row">
+                <div>
+                  <h2>Huéspedes</h2>
+                  <p class="section-intro">Registro principal y contexto de deuda por reserva.</p>
+                </div>
+                <button type="button" class="btn-open-modal" data-modal-open="modal-guest-form">Agregar huésped</button>
+              </div>
+              <section id="modal-guest-form" class="form-modal" hidden>
+                <div class="form-modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-guest-title">
+                  <div class="form-modal-head">
+                    <h3 id="modal-guest-title">Nuevo huésped</h3>
+                    <button type="button" class="btn-modal-close" data-modal-close>Cerrar</button>
+                  </div>
+                  <form id="guest-form">
+                    <input name="full_name" placeholder="Nombre completo" required />
+                    <input name="email" placeholder="Email" />
+                    <input name="phone" placeholder="Teléfono" />
+                    <button type="submit">Guardar huésped</button>
+                  </form>
+                </div>
+              </section>
+              <ul id="guests-list"></ul>
+            </article>
 
-        <article id="section-expenses" class="panel">
-          <h2>Gastos</h2>
-          <form id="expense-form">
-            <input name="category" placeholder="Categoría" required />
-            <input name="amount" type="number" step="0.01" placeholder="Monto" required />
-            <select name="payment_method" required>
-              <option value="transfer">Transferencia</option>
-              <option value="card">Tarjeta</option>
-              <option value="cash">Efectivo</option>
-              <option value="mercadopago">MercadoPago</option>
-              <option value="other">Otro</option>
-            </select>
-            <input name="expense_date" type="date" required />
-            <button type="submit">Registrar gasto</button>
-          </form>
-          <ul id="expenses-list"></ul>
-        </article>
+            <article id="section-reservations" class="panel">
+              <div class="panel-head panel-head-row">
+                <div>
+                  <h2>Reservas</h2>
+                  <p class="section-intro">Fechas, canal, pago y control del saldo pendiente.</p>
+                </div>
+                <button type="button" class="btn-open-modal" data-modal-open="modal-reservation-form">Agregar reserva</button>
+              </div>
+              <section id="modal-reservation-form" class="form-modal" hidden>
+                <div class="form-modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-reservation-title">
+                  <div class="form-modal-head">
+                    <h3 id="modal-reservation-title">Nueva reserva</h3>
+                    <button type="button" class="btn-modal-close" data-modal-close>Cerrar</button>
+                  </div>
+                  <form id="reservation-form">
+                    <input name="guest_document_id" placeholder="RUT huésped (ej: 12345678K)" required />
+                    <input name="guest_full_name" placeholder="Nombre huésped (si no existe se crea)" />
+                    <input name="guest_id" type="hidden" />
+                    <p id="reservation-guest-status" class="form-helper">Ingresa RUT para buscar huésped.</p>
+                    <select name="source" required>
+                      <option value="web">Web</option>
+                      <option value="airbnb">Airbnb</option>
+                      <option value="booking">Booking</option>
+                      <option value="phone">Teléfono</option>
+                      <option value="walkin">Mostrador</option>
+                      <option value="other">Otro</option>
+                    </select>
+                    <select name="payment_method" required>
+                      <option value="transfer">Transferencia</option>
+                      <option value="card">Tarjeta</option>
+                      <option value="cash">Efectivo</option>
+                      <option value="mercadopago">MercadoPago</option>
+                      <option value="other">Otro</option>
+                    </select>
+                    <input name="check_in" type="date" required />
+                    <input name="check_out" type="date" required />
+                    <input name="guests_count" type="number" min="1" value="1" required />
+                    <input name="total_amount" type="number" step="0.01" placeholder="Monto total" required />
+                    <button type="submit">Guardar reserva</button>
+                  </form>
+                </div>
+              </section>
+              <ul id="reservations-list"></ul>
+            </article>
 
-        <article id="section-documents" class="panel">
-          <h2>Boletas / Facturas</h2>
-          <form id="document-form">
-            <input name="reservation_id" placeholder="ID reserva (opcional)" />
-            <input name="sale_id" placeholder="ID venta (opcional)" />
-            <select name="document_type" required>
-              <option value="boleta">Boleta</option>
-              <option value="factura">Factura</option>
-            </select>
-            <input name="document_number" placeholder="N° documento" />
-            <input name="issue_date" type="date" required />
-            <input name="amount" type="number" step="0.01" placeholder="Monto" required />
-            <button type="submit">Emitir documento</button>
-          </form>
-          <ul id="documents-list"></ul>
-        </article>
-      </section>
+            <article id="section-sales" class="panel">
+              <div class="panel-head panel-head-row">
+                <div>
+                  <h2>Ventas</h2>
+                  <p class="section-intro">Ingresos diarios registrados por categoría y medio de pago.</p>
+                </div>
+                <button type="button" class="btn-open-modal" data-modal-open="modal-sale-form">Agregar venta</button>
+              </div>
+              <section id="modal-sale-form" class="form-modal" hidden>
+                <div class="form-modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-sale-title">
+                  <div class="form-modal-head">
+                    <h3 id="modal-sale-title">Nueva venta</h3>
+                    <button type="button" class="btn-modal-close" data-modal-close>Cerrar</button>
+                  </div>
+                  <form id="sale-form">
+                    <input name="reservation_id" placeholder="ID reserva (opcional)" />
+                    <input name="category" placeholder="Categoría" value="lodging" />
+                    <input name="amount" type="number" step="0.01" placeholder="Monto" required />
+                    <select name="payment_method" required>
+                      <option value="transfer">Transferencia</option>
+                      <option value="card">Tarjeta</option>
+                      <option value="cash">Efectivo</option>
+                      <option value="mercadopago">MercadoPago</option>
+                      <option value="other">Otro</option>
+                    </select>
+                    <input name="sale_date" type="date" required />
+                    <button type="submit">Registrar venta</button>
+                  </form>
+                </div>
+              </section>
+              <ul id="sales-list"></ul>
+            </article>
+
+            <article id="section-expenses" class="panel">
+              <div class="panel-head panel-head-row">
+                <div>
+                  <h2>Gastos</h2>
+                  <p class="section-intro">Egresos operativos para medir utilidad real del período.</p>
+                </div>
+                <button type="button" class="btn-open-modal" data-modal-open="modal-expense-form">Agregar gasto</button>
+              </div>
+              <section id="modal-expense-form" class="form-modal" hidden>
+                <div class="form-modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-expense-title">
+                  <div class="form-modal-head">
+                    <h3 id="modal-expense-title">Nuevo gasto</h3>
+                    <button type="button" class="btn-modal-close" data-modal-close>Cerrar</button>
+                  </div>
+                  <form id="expense-form">
+                    <input name="category" placeholder="Categoría" required />
+                    <input name="amount" type="number" step="0.01" placeholder="Monto" required />
+                    <select name="payment_method" required>
+                      <option value="transfer">Transferencia</option>
+                      <option value="card">Tarjeta</option>
+                      <option value="cash">Efectivo</option>
+                      <option value="mercadopago">MercadoPago</option>
+                      <option value="other">Otro</option>
+                    </select>
+                    <input name="expense_date" type="date" required />
+                    <button type="submit">Registrar gasto</button>
+                  </form>
+                </div>
+              </section>
+              <ul id="expenses-list"></ul>
+            </article>
+
+            <article id="section-documents" class="panel">
+              <div class="panel-head panel-head-row">
+                <div>
+                  <h2>Boletas / Facturas</h2>
+                  <p class="section-intro">Trazabilidad documental conectada con reservas y ventas.</p>
+                </div>
+                <button type="button" class="btn-open-modal" data-modal-open="modal-document-form">Agregar documento</button>
+              </div>
+              <section id="modal-document-form" class="form-modal" hidden>
+                <div class="form-modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-document-title">
+                  <div class="form-modal-head">
+                    <h3 id="modal-document-title">Nuevo documento</h3>
+                    <button type="button" class="btn-modal-close" data-modal-close>Cerrar</button>
+                  </div>
+                  <form id="document-form">
+                    <input name="reservation_id" placeholder="ID reserva (opcional)" />
+                    <input name="sale_id" placeholder="ID venta (opcional)" />
+                    <select name="document_type" required>
+                      <option value="boleta">Boleta</option>
+                      <option value="factura">Factura</option>
+                    </select>
+                    <input name="document_number" placeholder="N° documento" />
+                    <input name="issue_date" type="date" required />
+                    <input name="amount" type="number" step="0.01" placeholder="Monto" required />
+                    <button type="submit">Emitir documento</button>
+                  </form>
+                </div>
+              </section>
+              <ul id="documents-list"></ul>
+            </article>
+          </section>
+        </div>
+      </div>
     </main>
 
     <script src="/main.js" type="module"></script>

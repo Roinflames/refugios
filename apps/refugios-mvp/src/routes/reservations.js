@@ -50,16 +50,74 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ error: "Campos requeridos faltantes" });
     }
 
+    const parsedGuestId = Number(guest_id);
+    const parsedGuestsCount = Number(guests_count);
+    const parsedTotalAmount = Number(total_amount);
+
+    if (!Number.isInteger(parsedGuestId) || parsedGuestId <= 0) {
+      return res.status(400).json({ error: "guest_id invalido" });
+    }
+    if (!Number.isInteger(parsedGuestsCount) || parsedGuestsCount <= 0) {
+      return res.status(400).json({ error: "guests_count invalido" });
+    }
+    if (!Number.isFinite(parsedTotalAmount) || parsedTotalAmount < 0) {
+      return res.status(400).json({ error: "total_amount invalido" });
+    }
+    if (check_in >= check_out) {
+      return res.status(400).json({ error: "check_out debe ser posterior a check_in" });
+    }
+
+    const overlap = await query(
+      `SELECT id
+       FROM reservations
+       WHERE guest_id = $1
+         AND status IN ('pending', 'confirmed')
+         AND daterange(check_in, check_out, '[)') && daterange($2::date, $3::date, '[)')
+       LIMIT 1`,
+      [parsedGuestId, check_in, check_out]
+    );
+    if (overlap.rowCount > 0) {
+      return res.status(409).json({ error: "Ya existe una reserva activa de este huésped en ese período" });
+    }
+
     const result = await query(
       `INSERT INTO reservations (guest_id, source, payment_method, status, check_in, check_out, guests_count, total_amount, notes)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [guest_id, source, payment_method, status, check_in, check_out, guests_count, total_amount, notes]
+      [parsedGuestId, source, payment_method, status, check_in, check_out, parsedGuestsCount, parsedTotalAmount, notes]
     );
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
     next(error);
+  }
+});
+
+router.patch("/:id/release", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "id invalido" });
+  }
+
+  try {
+    const result = await query(
+      `UPDATE reservations
+       SET
+         status = 'completed',
+         check_out = CURRENT_DATE
+       WHERE id = $1
+         AND status IN ('pending', 'confirmed')
+       RETURNING id, guest_id, check_in, check_out, status`,
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Reserva activa no encontrada para liberar" });
+    }
+
+    return res.json({ ok: true, reservation: result.rows[0] });
+  } catch (error) {
+    return next(error);
   }
 });
 

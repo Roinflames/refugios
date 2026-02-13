@@ -39,6 +39,8 @@ Aplicación web monolítica (frontend estático + backend Node/Express + Postgre
 - Gestión de gastos.
 - Gestión de documentos (boleta/factura).
 - Dashboard de resumen (ventas, gastos, utilidad, cantidad de reservas).
+- Filtros operativos por período, categoría y canal para análisis de resultados.
+- Reportes tabulares priorizados sobre gráficos para operación diaria.
 - Eliminación de registros (huéspedes, reservas, ventas, gastos, documentos) desde UI y API.
 - Migración de históricos por CSV.
 
@@ -63,6 +65,7 @@ Aplicación web monolítica (frontend estático + backend Node/Express + Postgre
 - Formularios para crear huéspedes, reservas, ventas, gastos y documentos.
 - Navegación por secciones con breadcrumb y barra rápida.
 - Soporte de tema claro/oscuro con selector manual persistente.
+- Sección de reportes con filtros visibles y simples de usar (fecha desde/hasta, categoría, canal y estado).
 
 #### 3.1.2 Interfaz de software
 - API REST JSON.
@@ -96,6 +99,11 @@ Aplicación web monolítica (frontend estático + backend Node/Express + Postgre
 - `RF-11`: El sistema debe permitir eliminar registros de huéspedes, reservas, ventas, gastos y documentos.
 - `RF-12`: El sistema debe mostrar para huéspedes y reservas: canal de origen, fechas de check-in/check-out, forma de pago y estado de deuda.
 - `RF-13`: El sistema debe permitir alternar entre tema claro y oscuro desde la interfaz.
+- `RF-14`: El sistema debe permitir filtrar gastos por rango de fechas y categoría (ejemplo: gasto en aseo por mes).
+- `RF-15`: El sistema debe permitir filtrar ventas por período y mostrar total vendido para ese rango.
+- `RF-16`: El sistema debe permitir consultar número de reservas por período.
+- `RF-17`: El sistema debe calcular y mostrar porcentaje de ocupación por período consultado.
+- `RF-18`: El sistema debe priorizar listados y tablas filtrables por sobre gráficos complejos en la vista operativa.
 
 ### 3.3 Requisitos no funcionales
 - `RNF-01` Rendimiento: responder operaciones de consulta simples en menos de 2 segundos en condiciones normales de red.
@@ -122,6 +130,11 @@ Aplicación web monolítica (frontend estático + backend Node/Express + Postgre
 - `CA-08`: La UI muestra canal, fechas, forma de pago y deuda de huéspedes/reservas.
 - `CA-09`: La UI permite eliminar registros y refleja cambios sin recargar manualmente.
 - `CA-10`: La UI permite alternar tema claro/oscuro y mantiene preferencia al recargar.
+- `CA-11`: El operador puede filtrar gastos por mes y categoría, y obtiene el total del período solicitado.
+- `CA-12`: El operador puede filtrar ventas por rango de fechas y visualizar total vendido en ese período.
+- `CA-13`: El operador puede consultar cantidad de reservas para cualquier período definido.
+- `CA-14`: El sistema muestra porcentaje de ocupación para el período consultado.
+- `CA-15`: La vista principal de análisis prioriza filtros y resultados tabulares por encima de gráficos.
 
 ## 5. Anexos
 - Rutas de scripts operativos:

@@ -7,6 +7,17 @@ Estas reglas aplican por defecto a todos los subrepos bajo `/home/rreyes/project
 - Link operativo de referencia: `https://dashboard.render.com/`
 - Al terminar cambios relevantes: validar si corresponde subir a Git y dejar deploy listo.
 
+### Comando gatillo `#deploy`
+- Si el usuario escribe exactamente `#deploy`, se interpreta como aprobacion explicita para:
+  1. versionar cambios pendientes (commit),
+  2. push a la rama acordada (por defecto `main`),
+  3. disparar y/o validar deploy en Render con los scripts del repo.
+- Ante `#deploy`, no pedir reconfirmacion, salvo que falten variables criticas de entorno o permisos externos.
+
+### Comandos operativos de chat
+- `#help`: mostrar lista de comandos disponibles con descripcion breve de cada uno.
+- `#rule <texto>`: agregar una nueva regla operativa al archivo de instrucciones del repo (sin borrar reglas existentes).
+
 ## Flujo estándar por proyecto
 1. Revisar estado Git y rama activa.
 2. Ejecutar validaciones mínimas (lint/test/check si existen).

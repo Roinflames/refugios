@@ -3,6 +3,13 @@ import { query } from "../db/client.js";
 
 const router = Router();
 
+function normalizeDocumentId(value) {
+  return String(value || "")
+    .replace(/[.\s-]/g, "")
+    .toUpperCase()
+    .trim();
+}
+
 router.get("/", async (_req, res, next) => {
   try {
     const result = await query(
@@ -44,16 +51,41 @@ router.get("/", async (_req, res, next) => {
   }
 });
 
+router.get("/by-document/:documentId", async (req, res, next) => {
+  try {
+    const documentId = normalizeDocumentId(req.params.documentId);
+    if (!documentId) return res.status(400).json({ error: "documentId invalido" });
+
+    const result = await query(
+      `SELECT *
+       FROM guests
+       WHERE translate(upper(coalesce(document_id, '')), '.- ', '') = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [documentId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Huesped no encontrado para ese RUT" });
+    }
+
+    return res.json(result.rows[0]);
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.post("/", async (req, res, next) => {
   try {
     const { full_name, email = null, phone = null, document_id = null, notes = null } = req.body;
     if (!full_name) return res.status(400).json({ error: "full_name es requerido" });
+    const normalizedDocumentId = document_id ? normalizeDocumentId(document_id) : null;
 
     const result = await query(
       `INSERT INTO guests (full_name, email, phone, document_id, notes)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [full_name, email, phone, document_id, notes]
+      [full_name, email, phone, normalizedDocumentId, notes]
     );
 
     res.status(201).json(result.rows[0]);
