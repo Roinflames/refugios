@@ -35,6 +35,15 @@ app.use((error, _req, res, _next) => {
   if (error?.code === "MISSING_DATABASE_URL") {
     return res.status(503).json({ error: "Servicio no configurado: falta DATABASE_URL" });
   }
+  if (error?.code === "42P01") {
+    return res.status(503).json({ error: "Base de datos sin migrar. Ejecuta db:migrate." });
+  }
+  if (["ENOTFOUND", "EAI_AGAIN", "ECONNREFUSED"].includes(error?.code)) {
+    return res.status(503).json({ error: "No se pudo conectar a la base de datos." });
+  }
+  if (error?.code === "28P01") {
+    return res.status(503).json({ error: "Credenciales de base de datos invalidas." });
+  }
   res.status(500).json({ error: "Error interno del servidor" });
 });
 
