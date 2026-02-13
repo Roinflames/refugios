@@ -78,12 +78,18 @@ npm run db:import -- db/samples_reservations.csv db/samples_sales.csv
 
 ## Endpoints
 - `GET /api/users`
-- `GET/POST /api/guests`
-- `GET/POST /api/reservations`
-- `GET/POST /api/sales`
-- `GET/POST /api/expenses`
-- `GET/POST /api/documents`
+- `GET/POST/DELETE /api/guests`
+- `GET/POST/DELETE /api/reservations`
+- `GET/POST/DELETE /api/sales`
+- `GET/POST/DELETE /api/expenses`
+- `GET/POST/DELETE /api/documents`
 - `GET /api/dashboard/summary`
+
+## UX actual
+- Mobile-first real para uso en telefono.
+- Breadcrumb y navegacion rapida por secciones.
+- Tema claro/oscuro con toggle persistente.
+- Botones de eliminar por registro (con confirmacion).
 
 ## Deploy
 ### Render

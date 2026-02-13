@@ -39,6 +39,7 @@ Aplicación web monolítica (frontend estático + backend Node/Express + Postgre
 - Gestión de gastos.
 - Gestión de documentos (boleta/factura).
 - Dashboard de resumen (ventas, gastos, utilidad, cantidad de reservas).
+- Eliminación de registros (huéspedes, reservas, ventas, gastos, documentos) desde UI y API.
 - Migración de históricos por CSV.
 
 ### 2.3 Características de usuarios
@@ -58,18 +59,20 @@ Aplicación web monolítica (frontend estático + backend Node/Express + Postgre
 ## 3. Requisitos específicos
 ### 3.1 Requisitos de interfaces externas
 #### 3.1.1 Interfaz de usuario
-- Panel web responsivo accesible por navegador moderno.
+- Panel web mobile-first accesible por navegador moderno.
 - Formularios para crear huéspedes, reservas, ventas, gastos y documentos.
+- Navegación por secciones con breadcrumb y barra rápida.
+- Soporte de tema claro/oscuro con selector manual persistente.
 
 #### 3.1.2 Interfaz de software
 - API REST JSON.
 - Endpoints:
   - `GET /api/users`
-  - `GET/POST /api/guests`
-  - `GET/POST /api/reservations`
-  - `GET/POST /api/sales`
-  - `GET/POST /api/expenses`
-  - `GET/POST /api/documents`
+  - `GET/POST/DELETE /api/guests`
+  - `GET/POST/DELETE /api/reservations`
+  - `GET/POST/DELETE /api/sales`
+  - `GET/POST/DELETE /api/expenses`
+  - `GET/POST/DELETE /api/documents`
   - `GET /api/dashboard/summary`
 
 #### 3.1.3 Interfaz de hardware
@@ -90,6 +93,9 @@ Aplicación web monolítica (frontend estático + backend Node/Express + Postgre
 - `RF-08`: El sistema debe permitir importar reservas y ventas históricas desde archivos CSV.
 - `RF-09`: El sistema debe exponer un endpoint de salud (`/health`) para monitoreo de despliegue.
 - `RF-10`: El sistema debe incluir migraciones versionadas y migración de usuarios de prueba.
+- `RF-11`: El sistema debe permitir eliminar registros de huéspedes, reservas, ventas, gastos y documentos.
+- `RF-12`: El sistema debe mostrar para huéspedes y reservas: canal de origen, fechas de check-in/check-out, forma de pago y estado de deuda.
+- `RF-13`: El sistema debe permitir alternar entre tema claro y oscuro desde la interfaz.
 
 ### 3.3 Requisitos no funcionales
 - `RNF-01` Rendimiento: responder operaciones de consulta simples en menos de 2 segundos en condiciones normales de red.
@@ -103,6 +109,7 @@ Aplicación web monolítica (frontend estático + backend Node/Express + Postgre
 - `RB-02`: El origen de reserva debe pertenecer al catálogo permitido (`web`, `airbnb`, `booking`, `phone`, `walkin`, `other`).
 - `RB-03`: La forma de pago debe pertenecer al catálogo permitido (`cash`, `card`, `transfer`, `mercadopago`, `other`).
 - `RB-04`: El tipo de documento permitido es `boleta` o `factura`.
+- `RB-05`: No se permite eliminar un huésped si tiene reservas asociadas.
 
 ## 4. Criterios de aceptación del MVP
 - `CA-01`: Se puede crear y listar huéspedes desde UI y API.
@@ -112,6 +119,9 @@ Aplicación web monolítica (frontend estático + backend Node/Express + Postgre
 - `CA-05`: El dashboard muestra métricas totales coherentes con los registros.
 - `CA-06`: Las migraciones se ejecutan sin errores en una base limpia.
 - `CA-07`: La importación histórica desde CSV inserta registros válidos.
+- `CA-08`: La UI muestra canal, fechas, forma de pago y deuda de huéspedes/reservas.
+- `CA-09`: La UI permite eliminar registros y refleja cambios sin recargar manualmente.
+- `CA-10`: La UI permite alternar tema claro/oscuro y mantiene preferencia al recargar.
 
 ## 5. Anexos
 - Rutas de scripts operativos:
