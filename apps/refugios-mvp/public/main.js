@@ -1,4 +1,5 @@
 const money = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
+const UI_VERSION = "0.2.0";
 
 const paymentLabels = {
   transfer: "Transferencia",
@@ -37,6 +38,11 @@ function setupThemeToggle() {
     const current = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
     applyTheme(current === "dark" ? "light" : "dark");
   });
+}
+
+function setUiVersion() {
+  const el = document.getElementById("ui-version");
+  if (el) el.textContent = `UI v${UI_VERSION}`;
 }
 
 function toPayload(form) {
@@ -267,6 +273,7 @@ for (const [formId, endpoint, message] of [
 
 bindDeleteButtons();
 setupThemeToggle();
+setUiVersion();
 
 setStatus("Cargando panel...");
 loadAll()

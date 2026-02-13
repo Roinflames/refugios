@@ -92,7 +92,9 @@ p {
 }
 
 .breadcrumb {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   margin-bottom: 0.6rem;
   padding: 0.28rem 0.55rem;
   border-radius: 999px;
@@ -101,6 +103,16 @@ p {
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.03em;
+}
+
+.version-pill {
+  padding: 0.14rem 0.42rem;
+  border-radius: 999px;
+  border: 1px solid var(--chip-line);
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 800;
 }
 
 .eyebrow {
