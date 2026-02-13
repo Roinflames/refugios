@@ -32,6 +32,9 @@ app.use("/api/dashboard", dashboardRouter);
 
 app.use((error, _req, res, _next) => {
   console.error(error);
+  if (error?.code === "MISSING_DATABASE_URL") {
+    return res.status(503).json({ error: "Servicio no configurado: falta DATABASE_URL" });
+  }
   res.status(500).json({ error: "Error interno del servidor" });
 });
 

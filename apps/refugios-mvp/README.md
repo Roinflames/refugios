@@ -76,7 +76,10 @@ npm run db:import -- db/samples_reservations.csv db/samples_sales.csv
 ### Render
 1. Conectar repo
 2. Deploy con Docker desde `apps/refugios-mvp/Dockerfile` o usar `render.yaml`
-3. Definir variable `DATABASE_URL`
+3. En Render Dashboard -> Environment, definir `DATABASE_URL` (Neon/Postgres)
+4. Redeploy manual
+
+Si `DATABASE_URL` falta, la app inicia pero los endpoints `/api/*` responderan `503`.
 
 ### Vercel
 1. Importar repo
