@@ -1,5 +1,5 @@
 const money = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
-const UI_VERSION = "0.4.0";
+const UI_VERSION = "0.5.0";
 
 const paymentLabels = {
   transfer: "Transferencia",
