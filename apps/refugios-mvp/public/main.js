@@ -1,5 +1,5 @@
 const money = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
-const UI_VERSION = "0.6.1";
+const UI_VERSION = "0.7.0";
 
 const paymentLabels = {
   transfer: "Transferencia",
@@ -21,7 +21,12 @@ const state = {
   periodFrom: "",
   periodTo: "",
   availabilityDate: new Date().toISOString().slice(0, 10),
-  totalCabins: Number(localStorage.getItem("total_cabins") || 6)
+  totalCabins: Number(localStorage.getItem("total_cabins") || 6),
+  salesFilterPayment: "",
+  salesFilterCategory: "",
+  salesPage: 1,
+  salesPageSize: 10,
+  salesTotalRows: 0
 };
 
 function normalizeDocumentId(value) {
@@ -59,7 +64,7 @@ function setUiVersion() {
 }
 
 function setupFocusMode() {
-  const navLinks = [...document.querySelectorAll(".quick-nav a")];
+  const navLinks = [...document.querySelectorAll(".sidebar__link")];
   const panels = [...document.querySelectorAll(".panel")];
   const toggle = document.getElementById("view-toggle");
   const STORAGE_KEY = "view_mode";
@@ -67,7 +72,7 @@ function setupFocusMode() {
 
   const setActivePanel = (id) => {
     panels.forEach((panel) => panel.classList.toggle("is-active", `#${panel.id}` === id));
-    navLinks.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === id));
+    navLinks.forEach((link) => link.classList.toggle("is-active", link.getAttribute("href") === id));
   };
 
   const applyMode = () => {
@@ -79,7 +84,7 @@ function setupFocusMode() {
     } else {
       document.body.classList.remove("focus-mode");
       panels.forEach((panel) => panel.classList.add("is-active"));
-      navLinks.forEach((link) => link.classList.remove("active"));
+      navLinks.forEach((link) => link.classList.remove("is-active"));
       if (toggle) toggle.textContent = "Ver por sección";
     }
   };
@@ -89,6 +94,12 @@ function setupFocusMode() {
       const id = link.getAttribute("href");
       if (!id) return;
       event.preventDefault();
+      // Update sidebar active state
+      navLinks.forEach((l) => l.classList.remove("is-active"));
+      link.classList.add("is-active");
+      // Close mobile sidebar after navigation
+      const sidebar = document.getElementById("sidebar");
+      if (sidebar) sidebar.classList.remove("is-open");
       if (document.body.classList.contains("focus-mode")) {
         setActivePanel(id);
         return;
@@ -107,6 +118,23 @@ function setupFocusMode() {
   }
 
   applyMode();
+}
+
+function setupSidebarToggle() {
+  const toggle = document.getElementById("sidebar-toggle");
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+  if (!toggle || !sidebar) return;
+
+  const close = () => sidebar.classList.remove("is-open");
+
+  toggle.addEventListener("click", () => {
+    sidebar.classList.toggle("is-open");
+  });
+
+  if (overlay) {
+    overlay.addEventListener("click", close);
+  }
 }
 
 function closeModal(modal) {
@@ -302,6 +330,73 @@ function renderSummary({ sales, expenses, reservations }) {
     .join("");
 }
 
+function applySalesFilters(rows) {
+  return rows.filter((row) => {
+    if (state.salesFilterPayment && row.payment_method !== state.salesFilterPayment) return false;
+    if (state.salesFilterCategory) {
+      const category = String(row.category || "").toLowerCase();
+      if (!category.includes(state.salesFilterCategory)) return false;
+    }
+    return true;
+  });
+}
+
+function renderSalesKpis(rows) {
+  const total = rows.reduce((acc, row) => acc + Number(row.amount || 0), 0);
+  const count = rows.length;
+  const average = count > 0 ? total / count : 0;
+  const totalEl = document.getElementById("sales-kpi-total");
+  const countEl = document.getElementById("sales-kpi-count");
+  const avgEl = document.getElementById("sales-kpi-average");
+  if (totalEl) totalEl.textContent = money.format(total);
+  if (countEl) countEl.textContent = String(count);
+  if (avgEl) avgEl.textContent = money.format(average);
+}
+
+function getPagedRows(rows) {
+  const start = (state.salesPage - 1) * state.salesPageSize;
+  return rows.slice(start, start + state.salesPageSize);
+}
+
+function renderPaginationControls(totalRows) {
+  const controls = document.getElementById("sales-pagination");
+  if (!controls) return;
+  const totalPages = Math.max(1, Math.ceil(totalRows / state.salesPageSize));
+  if (state.salesPage > totalPages) state.salesPage = totalPages;
+  controls.innerHTML = `
+    <button data-pagination="prev" ${state.salesPage === 1 ? "disabled" : ""}>Anterior</button>
+    <span>Pagina ${state.salesPage} / ${totalPages}</span>
+    <button data-pagination="next" ${state.salesPage === totalPages ? "disabled" : ""}>Siguiente</button>
+    <label>Filas
+      <select id="sales-page-size">
+        <option value="10" ${state.salesPageSize === 10 ? "selected" : ""}>10</option>
+        <option value="20" ${state.salesPageSize === 20 ? "selected" : ""}>20</option>
+        <option value="50" ${state.salesPageSize === 50 ? "selected" : ""}>50</option>
+      </select>
+    </label>
+  `;
+}
+
+function renderSalesTable(rows) {
+  const body = document.getElementById("sales-table-body");
+  if (!body) return;
+  state.salesTotalRows = rows.length;
+  const pageRows = getPagedRows(rows);
+  renderPaginationControls(rows.length);
+  body.innerHTML = pageRows
+    .map(
+      (row) => `<tr>
+        <td>${formatDate(row.sale_date)}</td>
+        <td>${row.category}</td>
+        <td>${paymentLabels[row.payment_method] || row.payment_method}</td>
+        <td>${row.reservation_id ? `#${row.reservation_id}` : "-"}</td>
+        <td>${money.format(row.amount)}</td>
+        <td>${deleteButton("sales", row.id)}</td>
+      </tr>`
+    )
+    .join("");
+}
+
 function isReservationActiveOnDate(reservation, day) {
   const targetDay = toDateKey(day);
   const checkIn = toDateKey(reservation?.check_in);
@@ -459,6 +554,9 @@ async function loadAll() {
   });
 
   const orderedSales = [...filteredSales].sort((a, b) => dateWeight(b.sale_date) - dateWeight(a.sale_date));
+  const salesForView = applySalesFilters(orderedSales);
+  renderSalesKpis(salesForView);
+  renderSalesTable(salesForView);
   const orderedExpenses = [...filteredExpenses].sort((a, b) => dateWeight(b.expense_date) - dateWeight(a.expense_date));
   const orderedDocuments = [...filteredDocuments].sort((a, b) => dateWeight(b.issue_date) - dateWeight(a.issue_date));
 
@@ -501,18 +599,7 @@ async function loadAll() {
       <div class="record-actions">${deleteButton("reservations", row.id)}</div>
     </li>`);
 
-  renderList("sales-list", orderedSales, (row) => `<li class="record-item">
-      <div class="record-main">
-        <span class="record-title">${row.category}</span>
-        <span class="record-id">#${row.id}</span>
-      </div>
-      <div class="record-meta">
-        ${chip(`Fecha ${formatDate(row.sale_date)}`)}
-        ${chip(`Pago ${paymentLabels[row.payment_method] || row.payment_method}`)}
-        ${chip(`Monto ${money.format(row.amount)}`)}
-      </div>
-      <div class="record-actions">${deleteButton("sales", row.id)}</div>
-    </li>`);
+  renderSalesTable(salesForView);
 
   renderList("expenses-list", orderedExpenses, (row) => `<li class="record-item">
       <div class="record-main">
@@ -738,6 +825,48 @@ function bindPeriodControls() {
   });
 }
 
+function bindSalesFilters() {
+  const payment = document.getElementById("sales-filter-payment");
+  const category = document.getElementById("sales-filter-category");
+  if (!payment || !category) return;
+
+  payment.addEventListener("change", async () => {
+    state.salesFilterPayment = payment.value || "";
+    setStatus("Aplicando filtro de ventas...");
+    state.salesPage = 1;
+    await loadAll();
+    setStatus("Filtro de ventas aplicado", "ok");
+  });
+
+  category.addEventListener("input", async () => {
+    state.salesFilterCategory = String(category.value || "").trim().toLowerCase();
+    await loadAll();
+    state.salesPage = 1;
+  });
+}
+
+function bindSalesPagination() {
+  const container = document.getElementById("sales-pagination");
+  if (!container) return;
+  container.addEventListener("click", async (event) => {
+    const btn = event.target.closest("button[data-pagination]");
+    if (!btn) return;
+    const direction = btn.getAttribute("data-pagination");
+    const totalRows = state.salesTotalRows;
+    const totalPages = Math.max(1, Math.ceil(totalRows / state.salesPageSize));
+    if (direction === "prev" && state.salesPage > 1) state.salesPage -= 1;
+    if (direction === "next" && state.salesPage < totalPages) state.salesPage += 1;
+    await loadAll();
+  });
+  container.addEventListener("change", async (event) => {
+    const select = event.target.closest("#sales-page-size");
+    if (!select) return;
+    state.salesPageSize = Number(select.value) || 10;
+    state.salesPage = 1;
+    await loadAll();
+  });
+}
+
 for (const [formId, endpoint, message] of [
   ["guest-form", "/api/guests", "Huesped guardado"],
   ["sale-form", "/api/sales", "Venta registrada"],
@@ -751,12 +880,15 @@ bindReservationGuestLookup();
 bindReservationForm();
 bindDeleteButtons();
 bindPeriodControls();
+bindSalesFilters();
+bindSalesPagination();
 bindAvailabilityActions();
 setupAvailabilityControls();
 setupSectionModals();
 setupThemeToggle();
 setUiVersion();
 setupFocusMode();
+setupSidebarToggle();
 updatePeriodLabel();
 
 setStatus("Cargando panel...");
